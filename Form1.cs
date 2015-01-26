@@ -19,12 +19,8 @@ namespace SteamLanSync
     {
         SyncManager manager;
         
-        private long _transferLastUpdated = 0;
-        private long _transferLastBytesTransferred = 0;
         private System.Timers.Timer _updateSpeedTimer;
-
-
-
+        
         private delegate void LogDataCallback(string s);
         private delegate void SyncPeerUpdatedCallback(object sender, SyncPeerUpdatedEventArgs e);
 

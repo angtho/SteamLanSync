@@ -20,11 +20,15 @@ namespace SteamLanSync
         {
             Trace.AutoFlush = true;
 
+            // set up debug logger
             FileStream fs = File.Open("log.txt", FileMode.Create, FileAccess.Write, FileShare.Read);
             logger = new TextWriterTraceListener(fs);
             Debug.Listeners.Add(logger);
-            
-            
+
+            // set up exception logging
+            Application.ThreadException += Application_ThreadException;
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -35,6 +39,17 @@ namespace SteamLanSync
             
         }
 
+        static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            if (e.ExceptionObject is Exception)
+                logException((Exception)e.ExceptionObject);
+        }
+
+        private static void Application_ThreadException(object sender, System.Threading.ThreadExceptionEventArgs e)
+        {
+            logException(e.Exception);
+        }
+
         static void Application_ApplicationExit(object sender, EventArgs e)
         {
             logger.Flush();
@@ -42,6 +57,11 @@ namespace SteamLanSync
             logger.Dispose();
         }
 
+        private static void logException(Exception ex)
+        {
+            Debug.WriteLine("An unhandled exception occurred");
+            Debug.WriteLine(ex.Message + "\n\nStack Trace:\n" + ex.StackTrace);
+        }
 
     }
 }
