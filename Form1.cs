@@ -135,13 +135,24 @@ namespace SteamLanSync
                 return;
             }
 
-            if (listViewLibrary.Columns.Count == 0) // once off
+            listViewLibrary.Items.Clear();
+
+            if (manager.Library.Apps.Count == 0)
+            {
+                labelNoLibraryApps.Visible = true;
+                listViewLibrary.Columns.Clear();
+                return;
+            }
+
+            labelNoLibraryApps.Visible = false;
+            if (listViewLibrary.Columns.Count == 0)
             {
                 listViewLibrary.Columns.Add("Name", 200);
                 listViewLibrary.Columns.Add("Size", 75, HorizontalAlignment.Right);
                 listViewLibrary.View = View.Details;
             }
-
+            
+            
             ListViewItem lvi;
             FileSizeFormatProvider fmt = new FileSizeFormatProvider();
             foreach (AppInfo app in manager.Library.Apps.Values)
@@ -156,15 +167,27 @@ namespace SteamLanSync
 
         private void refreshAvailableAppsListView()
         {
-            if (manager == null || manager.Library == null)
+            if (manager == null || manager.AvailableApps == null)
             {
                 return;
             }
 
-            listViewAvailableApps.Clear();
-            listViewAvailableApps.Columns.Add("Name", 200);
-            listViewAvailableApps.Columns.Add("Size", 75, HorizontalAlignment.Right);
-            listViewAvailableApps.View = View.Details;
+            listViewAvailableApps.Items.Clear();
+
+            if (manager.AvailableApps.Count == 0)
+            {
+                listViewAvailableApps.Columns.Clear();
+                lblNoApps.Visible = true;
+                return;
+            }
+
+            lblNoApps.Visible = false;
+            if (listViewAvailableApps.Columns.Count == 0)
+            {
+                listViewAvailableApps.Columns.Add("Name", 200);
+                listViewAvailableApps.Columns.Add("Size", 75, HorizontalAlignment.Right);
+                listViewAvailableApps.View = View.Details;
+            }
 
             ListViewItem lvi;
             FileSizeFormatProvider fmt = new FileSizeFormatProvider();
@@ -174,8 +197,6 @@ namespace SteamLanSync
                 lvi.Tag = app;
                 listViewAvailableApps.Items.Add(lvi);
             }
-
-            lblNoApps.Visible = listViewAvailableApps.Items.Count == 0;
 
             refreshLibraryListView(); // todo - set up a separate event handler
         }

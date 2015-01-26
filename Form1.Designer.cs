@@ -47,6 +47,7 @@
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripUpDownLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblNoApps = new System.Windows.Forms.Label();
+            this.labelNoLibraryApps = new System.Windows.Forms.Label();
             this.menuSysTray.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
@@ -177,7 +178,7 @@
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(632, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(633, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
@@ -192,17 +193,30 @@
             this.lblNoApps.AutoSize = true;
             this.lblNoApps.BackColor = System.Drawing.SystemColors.Window;
             this.lblNoApps.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblNoApps.Location = new System.Drawing.Point(358, 67);
+            this.lblNoApps.Location = new System.Drawing.Point(359, 46);
             this.lblNoApps.Name = "lblNoApps";
             this.lblNoApps.Size = new System.Drawing.Size(151, 15);
             this.lblNoApps.TabIndex = 20;
             this.lblNoApps.Text = "No apps available to install";
+            // 
+            // labelNoLibraryApps
+            // 
+            this.labelNoLibraryApps.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelNoLibraryApps.AutoSize = true;
+            this.labelNoLibraryApps.BackColor = System.Drawing.SystemColors.Window;
+            this.labelNoLibraryApps.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelNoLibraryApps.Location = new System.Drawing.Point(24, 46);
+            this.labelNoLibraryApps.Name = "labelNoLibraryApps";
+            this.labelNoLibraryApps.Size = new System.Drawing.Size(130, 15);
+            this.labelNoLibraryApps.TabIndex = 21;
+            this.labelNoLibraryApps.Text = "No apps in your Library";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(664, 449);
+            this.Controls.Add(this.labelNoLibraryApps);
             this.Controls.Add(this.lblNoApps);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.progressBarTransfer);
@@ -244,6 +258,7 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripUpDownLabel;
         private System.Windows.Forms.Label lblNoApps;
+        private System.Windows.Forms.Label labelNoLibraryApps;
     }
 }
 
