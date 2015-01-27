@@ -120,8 +120,15 @@ namespace SteamLanSync
             manager.OnTransferRemoved += transferRemoved;
             manager.OnStatusUpdated += managerUpdatedStatus;
             manager.OnAvailableAppsUpdated += managerUpdatedAvailableApps;
-            manager.Start();
-            refreshLibraryListView();
+            try
+            {
+                manager.Start();
+                refreshLibraryListView();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Unable to sync your Steam library. " + ex.Message, "Cannot Sync", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         

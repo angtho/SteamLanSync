@@ -140,13 +140,21 @@ namespace SteamLanSync
                 string filePath;
                 Utility.EnsureEndsWithSlash(ref rootDir);
 
-                // create directory if needed
-                filePath = rootDir + currentFile.path; // todo ensure this is inside Library path (..\ may escape it)
+                //determine path to save file
+                filePath = rootDir + currentFile.path; 
+                
+                //ensure this is inside Library path (../ may escape it)
+                if (filePath.Contains(".." + Path.DirectorySeparatorChar) || filePath.Contains(".." + Path.AltDirectorySeparatorChar))
+                {
+                    throw new Exception("Cannot write to a directory outside ManifestRoot (Library path)");
+                }
+
                 FileInfo fi = new FileInfo(filePath);
                 if (!fi.Directory.Exists)
                 {
                     try
                     {
+                        // create directory if needed
                         Directory.CreateDirectory(fi.DirectoryName);
                     }
                     catch (Exception ex)

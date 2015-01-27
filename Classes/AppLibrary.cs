@@ -123,7 +123,7 @@ namespace SteamLanSync
             return filtered.ToArray();
         }
 
-        // Tests that a directory exists, and has a subdirectory named "common"
+        // Tests that a directory exists and is named "steamapps"
         public static bool IsValidLibraryPath(string path)
         {
             if (path.Length == 0)
@@ -136,14 +136,8 @@ namespace SteamLanSync
                 if (!di.Exists)
                     return false;
 
-                DirectoryInfo[] subdirs = di.GetDirectories();
-                for (int i = 0; i < subdirs.Length; i++)
-                {
-                    if (subdirs[i].Name.ToUpper() == "COMMON")
-                    {
-                        return true;
-                    }
-                }
+                if (di.Name.ToUpper() != "STEAMAPPS")
+                    return false;
             }
             catch (Exception ex)
             {
@@ -151,6 +145,46 @@ namespace SteamLanSync
                 Debug.WriteLine(ex);
             }
             
+            return true;
+        }
+
+        public static bool CanWriteToDirectory(string path)
+        {
+            if (path.Length == 0)
+                return false;
+
+            try
+            {
+                // see if it has a subdirectory called "common"
+                DirectoryInfo di = new DirectoryInfo(path);
+                if (!di.Exists)
+                    return false;
+
+                Utility.EnsureEndsWithSlash(ref path);
+                int i = 0;
+                string filePath;
+                do
+                {
+                    filePath = path + "testfile" + i.ToString() + ".txt";
+                } while (File.Exists(filePath));
+                
+                FileStream fs = File.OpenWrite(filePath);
+                byte[] bytes = Encoding.UTF8.GetBytes("I CAN WRITE");
+                fs.Write(bytes, 0, bytes.Length);
+                fs.Flush();
+                fs.Close();
+                string readBack = File.ReadAllText(filePath);
+                if (readBack == "I CAN WRITE") {
+                    File.Delete(filePath);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Caught exception in CanWriteToDirectory with path [" + path + "]");
+                Debug.WriteLine(ex);
+            }
+
             return false;
         }
     }

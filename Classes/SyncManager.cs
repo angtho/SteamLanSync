@@ -107,6 +107,11 @@ namespace SteamLanSync
             {
                 throw new InvalidOperationException("Cannot start SyncManager without a valid ListenPort");
             }
+
+            if (!AppLibrary.CanWriteToDirectory(Library.Path))
+            {
+                throw new ArgumentException("Cannot write to Library path " + Library.Path);
+            }
             
             _udpAgent = new UdpAgent(BroadcastPort);
             _udpAgent.OnMessageReceived += new MessageReceivedEventHandler(handleMessage);
