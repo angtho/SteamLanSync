@@ -65,6 +65,7 @@ namespace SteamLanSync
                     // show "select library location" form
                     showSettingsDialog();
                 }
+                notifyIcon.ShowBalloonTip(15000, "Steam Library Location", "To change your Steam Library location, right-click this icon and select Settings.", ToolTipIcon.Info);
             }
 
             doLayout();
@@ -75,6 +76,8 @@ namespace SteamLanSync
             _updateSpeedTimer.AutoReset = true;
             _updateSpeedTimer.SynchronizingObject = this;
             _updateSpeedTimer.Start();
+
+            //notifyIcon.ShowBalloonTip(3000, "Hello world!", "This is a longer description\nwith another\nline", ToolTipIcon.None);
         }
 
         private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -353,7 +356,7 @@ namespace SteamLanSync
             if (this.Disposing || this.IsDisposed)
                 return;
            
-            if (manager.Transfers.Count == 0)
+            if (manager ==null || manager.Transfers.Count == 0)
                 return;
 
             TransferInfo[] downloads = manager.Transfers.Values.Where((t) => { return t.State == TransferState.InProgress && t.IsSending == false; }).ToArray();
@@ -439,11 +442,11 @@ namespace SteamLanSync
 
         private void doLayout()
         {
-            listViewLibrary.Left = 20;
-            listViewLibrary.Width = (this.ClientRectangle.Width / 2) - 10 - 20;
+            listViewLibrary.Left = 16;
+            listViewLibrary.Width = (this.ClientRectangle.Width / 2) - 8 - 16;
             
-            listViewAvailableApps.Width = (this.ClientRectangle.Width / 2) - 10 - 20;
-            listViewAvailableApps.Left = listViewLibrary.Right + 20;
+            listViewAvailableApps.Width = (this.ClientRectangle.Width / 2) - 8 - 16;
+            listViewAvailableApps.Left = listViewLibrary.Right + 16;
             
             labelAvailableApps.Left = listViewAvailableApps.Left;
             labelMyLibrary.Left = listViewLibrary.Left;
