@@ -16,6 +16,7 @@ namespace SteamLanSync
     public class TransferAgent
     {
         private TransferInfo _transfer;
+        private Thread _thread;
 
         public TransferInfo Transfer
         {
@@ -52,9 +53,9 @@ namespace SteamLanSync
             _transfer = transfer;
             _transfer.Agent = this;
             _transfer.State = TransferState.WaitingForManifest;
-            Thread t = new Thread(new ThreadStart(doReceive));
-            transfer.Thread = t;
-            t.Start();
+            _thread = new Thread(new ThreadStart(doReceive));
+            transfer.Thread = _thread;
+            _thread.Start();
             
         }
 
@@ -235,11 +236,17 @@ namespace SteamLanSync
                 }
             }
 
-            _transfer.State = TransferState.Complete;
+            
 
             if (totalBytesWritten < totalBytesExpected)
             {
                 Debug.WriteLine(String.Format("Expected {0} bytes but only received {1} bytes", totalBytesExpected, totalBytesWritten));
+                _transfer.StateChangeReason = String.Format(new FileSizeFormatProvider(), "Peer closed connection after {0:fs} transferred (expected {1:fs})", totalBytesWritten, totalBytesExpected);
+                _transfer.State = TransferState.Failed;
+            }
+            else
+            {
+                _transfer.State = TransferState.Complete;
             }
 
             ns.Close();
@@ -317,6 +324,13 @@ namespace SteamLanSync
 
                 if (client != null && client.Connected)
                     client.Close();
+            }
+        }
+
+        public void CancelTransfer() {
+            if (_thread != null)
+            {
+                _thread.Abort();
             }
         }
 

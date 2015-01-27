@@ -15,7 +15,7 @@ using System.IO;
 
 namespace SteamLanSync
 {
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
         SyncManager manager;
         
@@ -23,8 +23,9 @@ namespace SteamLanSync
         
         private delegate void LogDataCallback(string s);
         private delegate void SyncPeerUpdatedCallback(object sender, SyncPeerUpdatedEventArgs e);
+        private bool _isClosing = false;
 
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
             Font = SystemFonts.MessageBoxFont;
@@ -78,6 +79,7 @@ namespace SteamLanSync
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            _isClosing = true;
             notifyIcon.Visible = false;
             notifyIcon.Dispose();
             if (_updateSpeedTimer != null)
@@ -259,21 +261,46 @@ namespace SteamLanSync
             }
             else
             {
+                // ignore if we're closing (i.e. exiting app)
+                if (_isClosing)
+                    return;
+                
                 TransferInfo transfer = (TransferInfo)sender;
                 if (e.NewState == TransferState.Failed)
                 { // show message box with failure reason
+                    labelTransferName.Text = "";
+                    labelTransferTime.Text = "";
+                    labelTransferSpeed.Text = "";
+                    
                     string msg = "Unable to sync " + transfer.App.Name + ".";
                     if (e.Reason.Length > 0) { msg += " " + e.Reason + "."; }
+
                     MessageBox.Show(msg, "Transfer Failed");
+                }
+                else if (e.NewState == TransferState.WaitingForManifest && !transfer.IsSending)
+                {
+                    labelTransferName.Text = transfer.App.Name;
+                    labelTransferTime.Text = "Starting...";
+                }
+                else if (e.NewState == TransferState.InProgress && !transfer.IsSending)
+                {
+                    progressBarTransfer.Maximum = (int)(transfer.TotalBytes / 1024);
+                    progressBarTransfer.Value = (int)(transfer.BytesTransferred / 1024);
+                    labelTransferName.Text = transfer.App.Name;
                 }
                 else if (e.NewState == TransferState.Complete && !transfer.IsSending)
                 {
                     progressBarTransfer.Maximum = 10;
                     progressBarTransfer.Value = 10;
-                    
+
+                    long bytesPerSec = transfer.TransferSpeed;
+                    TimeSpan timeTaken = TimeSpan.FromSeconds(transfer.ElapsedMilliseconds / 1000);
+                    labelTransferTime.Text = String.Format(new FileSizeFormatProvider(), "{0:fs} in ", transfer.TotalBytes) + timeTaken.ToString("c");
+                    labelTransferSpeed.Text = String.Format(new FileSizeFormatProvider(), "{0:fs}/s", bytesPerSec);
                     MessageBox.Show(String.Format("{0} has finished syncing!", transfer.App.Name), "Transfer Complete");
                     
                 }
+                
                 
             }
         }
@@ -290,7 +317,19 @@ namespace SteamLanSync
                 TransferInfo transfer = (TransferInfo)sender;
                 progressBarTransfer.Maximum = (int)(transfer.TotalBytes / 1024);
                 progressBarTransfer.Value = (int)(transfer.BytesTransferred / 1024);
+                
+                long bytesPerSec = transfer.TransferSpeed;
+                long secRemaining;
+                long avgTransferSpeed = 1000 * transfer.BytesTransferred / transfer.ElapsedMilliseconds;
+                if (avgTransferSpeed > 0)
+                    secRemaining = (transfer.TotalBytes - transfer.BytesTransferred) / avgTransferSpeed;
+                else 
+                    secRemaining = 0;
 
+                TimeSpan timeRemaining = TimeSpan.FromSeconds((double)secRemaining);
+
+                labelTransferSpeed.Text = String.Format(new FileSizeFormatProvider(), "{0:fs}/s", bytesPerSec);
+                labelTransferTime.Text = String.Format("{0:c} remaining", timeRemaining);
             }
         }
 

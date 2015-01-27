@@ -1,6 +1,6 @@
 ﻿namespace SteamLanSync
 {
-    partial class Form1
+    partial class FormMain
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.label3 = new System.Windows.Forms.Label();
             this.listViewLibrary = new System.Windows.Forms.ListView();
             this.listViewAvailableApps = new System.Windows.Forms.ListView();
@@ -48,6 +48,9 @@
             this.toolStripUpDownLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblNoApps = new System.Windows.Forms.Label();
             this.labelNoLibraryApps = new System.Windows.Forms.Label();
+            this.labelTransferName = new System.Windows.Forms.Label();
+            this.labelTransferSpeed = new System.Windows.Forms.Label();
+            this.labelTransferTime = new System.Windows.Forms.Label();
             this.menuSysTray.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
@@ -68,7 +71,7 @@
             this.listViewLibrary.FullRowSelect = true;
             this.listViewLibrary.Location = new System.Drawing.Point(12, 33);
             this.listViewLibrary.Name = "listViewLibrary";
-            this.listViewLibrary.Size = new System.Drawing.Size(312, 302);
+            this.listViewLibrary.Size = new System.Drawing.Size(312, 310);
             this.listViewLibrary.TabIndex = 12;
             this.listViewLibrary.UseCompatibleStateImageBehavior = false;
             // 
@@ -76,9 +79,9 @@
             // 
             this.listViewAvailableApps.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.listViewAvailableApps.Location = new System.Drawing.Point(346, 33);
+            this.listViewAvailableApps.Location = new System.Drawing.Point(339, 33);
             this.listViewAvailableApps.Name = "listViewAvailableApps";
-            this.listViewAvailableApps.Size = new System.Drawing.Size(301, 302);
+            this.listViewAvailableApps.Size = new System.Drawing.Size(301, 310);
             this.listViewAvailableApps.TabIndex = 13;
             this.listViewAvailableApps.UseCompatibleStateImageBehavior = false;
             this.listViewAvailableApps.SelectedIndexChanged += new System.EventHandler(this.listViewAvailableApps_SelectedIndexChanged);
@@ -87,7 +90,7 @@
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(343, 14);
+            this.label4.Location = new System.Drawing.Point(336, 14);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(77, 13);
             this.label4.TabIndex = 14;
@@ -97,7 +100,7 @@
             // 
             this.buttonRequestApp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.buttonRequestApp.Enabled = false;
-            this.buttonRequestApp.Location = new System.Drawing.Point(535, 341);
+            this.buttonRequestApp.Location = new System.Drawing.Point(528, 349);
             this.buttonRequestApp.Name = "buttonRequestApp";
             this.buttonRequestApp.Size = new System.Drawing.Size(112, 23);
             this.buttonRequestApp.TabIndex = 15;
@@ -108,7 +111,7 @@
             // progressBarTransfer
             // 
             this.progressBarTransfer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBarTransfer.Location = new System.Drawing.Point(346, 380);
+            this.progressBarTransfer.Location = new System.Drawing.Point(339, 400);
             this.progressBarTransfer.Name = "progressBarTransfer";
             this.progressBarTransfer.Size = new System.Drawing.Size(301, 23);
             this.progressBarTransfer.TabIndex = 16;
@@ -162,9 +165,9 @@
             this.statusStripMainLabel,
             this.toolStripStatusLabel1,
             this.toolStripUpDownLabel});
-            this.statusStrip.Location = new System.Drawing.Point(0, 427);
+            this.statusStrip.Location = new System.Drawing.Point(0, 460);
             this.statusStrip.Name = "statusStrip";
-            this.statusStrip.Size = new System.Drawing.Size(664, 22);
+            this.statusStrip.Size = new System.Drawing.Size(657, 22);
             this.statusStrip.SizingGrip = false;
             this.statusStrip.TabIndex = 19;
             this.statusStrip.Text = "statusStrip";
@@ -178,7 +181,7 @@
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(633, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(626, 17);
             this.toolStripStatusLabel1.Spring = true;
             this.toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
@@ -193,7 +196,7 @@
             this.lblNoApps.AutoSize = true;
             this.lblNoApps.BackColor = System.Drawing.SystemColors.Window;
             this.lblNoApps.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblNoApps.Location = new System.Drawing.Point(359, 46);
+            this.lblNoApps.Location = new System.Drawing.Point(352, 46);
             this.lblNoApps.Name = "lblNoApps";
             this.lblNoApps.Size = new System.Drawing.Size(151, 15);
             this.lblNoApps.TabIndex = 20;
@@ -205,17 +208,47 @@
             this.labelNoLibraryApps.AutoSize = true;
             this.labelNoLibraryApps.BackColor = System.Drawing.SystemColors.Window;
             this.labelNoLibraryApps.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.labelNoLibraryApps.Location = new System.Drawing.Point(24, 46);
+            this.labelNoLibraryApps.Location = new System.Drawing.Point(17, 46);
             this.labelNoLibraryApps.Name = "labelNoLibraryApps";
             this.labelNoLibraryApps.Size = new System.Drawing.Size(130, 15);
             this.labelNoLibraryApps.TabIndex = 21;
             this.labelNoLibraryApps.Text = "No apps in your Library";
             // 
-            // Form1
+            // labelTransferName
+            // 
+            this.labelTransferName.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelTransferName.Location = new System.Drawing.Point(336, 385);
+            this.labelTransferName.Name = "labelTransferName";
+            this.labelTransferName.Size = new System.Drawing.Size(304, 12);
+            this.labelTransferName.TabIndex = 22;
+            this.labelTransferName.Text = "   ";
+            // 
+            // labelTransferSpeed
+            // 
+            this.labelTransferSpeed.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelTransferSpeed.Location = new System.Drawing.Point(540, 426);
+            this.labelTransferSpeed.Name = "labelTransferSpeed";
+            this.labelTransferSpeed.Size = new System.Drawing.Size(100, 13);
+            this.labelTransferSpeed.TabIndex = 23;
+            this.labelTransferSpeed.Text = "    ";
+            this.labelTransferSpeed.TextAlign = System.Drawing.ContentAlignment.TopRight;
+            // 
+            // labelTransferTime
+            // 
+            this.labelTransferTime.Location = new System.Drawing.Point(336, 426);
+            this.labelTransferTime.Name = "labelTransferTime";
+            this.labelTransferTime.Size = new System.Drawing.Size(100, 23);
+            this.labelTransferTime.TabIndex = 24;
+            this.labelTransferTime.Text = "    ";
+            // 
+            // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(664, 449);
+            this.ClientSize = new System.Drawing.Size(657, 482);
+            this.Controls.Add(this.labelTransferTime);
+            this.Controls.Add(this.labelTransferSpeed);
+            this.Controls.Add(this.labelTransferName);
             this.Controls.Add(this.labelNoLibraryApps);
             this.Controls.Add(this.lblNoApps);
             this.Controls.Add(this.statusStrip);
@@ -226,7 +259,7 @@
             this.Controls.Add(this.listViewLibrary);
             this.Controls.Add(this.label3);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "Form1";
+            this.Name = "FormMain";
             this.Text = "SteamLanSync";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
@@ -259,6 +292,9 @@
         private System.Windows.Forms.ToolStripStatusLabel toolStripUpDownLabel;
         private System.Windows.Forms.Label lblNoApps;
         private System.Windows.Forms.Label labelNoLibraryApps;
+        private System.Windows.Forms.Label labelTransferName;
+        private System.Windows.Forms.Label labelTransferSpeed;
+        private System.Windows.Forms.Label labelTransferTime;
     }
 }
 

@@ -65,16 +65,30 @@ namespace SteamLanSync
         public long TotalBytes = 0;
         public long BytesTransferred = 0;
 
-        private long _bytesTransferredAtLastUpdate = 0;
-        private long _ticksAtLastUpdate = 0;
-
+        private long _lastBytesTransferred = 0;
+        private long _lastMillis = 0;
+        
+        private Stopwatch _speedStopwatch = null;
         private Queue<long> _speedHistory = new Queue<long>(10);
+
+        public long ElapsedMilliseconds
+        {
+            get
+            {
+                if (_speedStopwatch == null)
+                    return 0;
+                return _speedStopwatch.ElapsedMilliseconds;
+            }
+        }
 
         public TransferState State
         {
             get { return _state; }
             set
             {
+                if (value == _state)
+                    return; 
+                
                 TransferStateChangedEventArgs args = new TransferStateChangedEventArgs();
                 args.OldState = _state;
                 args.NewState = value;
@@ -82,11 +96,27 @@ namespace SteamLanSync
                 StateChangeReason = "";
                 _state = value;
 
-                if (args.OldState != args.NewState)
+                TransferStateChangedEventHandler handler = OnTransferStateChanged;
+                if (handler != null)
+                    handler(this, args);
+
+
+                if (args.NewState == TransferState.InProgress)
                 {
-                    TransferStateChangedEventHandler handler = OnTransferStateChanged;
-                    if (handler != null)
-                        handler(this, args);
+                    // start internal timer
+                    if (_speedStopwatch == null)
+                        _speedStopwatch = new Stopwatch();
+                    
+                    _speedStopwatch.Restart();
+                }
+
+                if (args.OldState == TransferState.InProgress)
+                {
+                    // stop internal timer
+                    if (_speedStopwatch != null)
+                    {
+                        _speedStopwatch.Stop();
+                    }
                 }
             }
         }
@@ -108,36 +138,54 @@ namespace SteamLanSync
 
         public void FireDataTransferredEvent()
         {
-            long bytesTransferred = BytesTransferred - _bytesTransferredAtLastUpdate;
-            long ticks = DateTime.Now.Ticks - _ticksAtLastUpdate;
+            long byteThisInterval = BytesTransferred - _lastBytesTransferred;
+            long millis = _speedStopwatch.ElapsedMilliseconds - _lastMillis;
 
             DataTransferredEventHandler handler = OnDataTransferred;
             if (handler != null)
-                handler(this, new DataTransferredEventArgs(bytesTransferred, ticks / 10000));
+                handler(this, new DataTransferredEventArgs(byteThisInterval, millis));
 
-            _bytesTransferredAtLastUpdate = BytesTransferred;
-            _ticksAtLastUpdate = DateTime.Now.Ticks;
-            long millis = ticks/10000;
+            _lastBytesTransferred = BytesTransferred;
+            _lastMillis = _speedStopwatch.ElapsedMilliseconds;
             if (millis > 0)
-                _speedHistory.Enqueue(1000 * bytesTransferred / millis);
+            {
+                lock (_speedHistory)
+                {
+                    _speedHistory.Enqueue(1000 * byteThisInterval / millis);
+                }
+            }
         }
 
+        
+
         /// <summary>
-        /// The average of the last 10 recorded transfer speeds. Transfer speed is only measured
-        /// at intervals while data is being transferred, so as soon as the transfer stops,
-        /// this property will give incorrect results.
+        /// The transfer speed in bytes per second. If the transfer state is TransferState.InProgress,
+        /// this is the average transfer speed calculated over the last 10 DataTransferred events.
+        /// Otherwise, it is calculated over the entire transfer time.
         /// </summary>
         public long TransferSpeed
         {
             get
             {
                 if (State != TransferState.InProgress)
+                {
+                    if (_speedStopwatch != null && _speedStopwatch.ElapsedMilliseconds > 0)
+                    {
+                        return 1000 * BytesTransferred / _speedStopwatch.ElapsedMilliseconds;
+                    }
                     return 0;
+                }
 
                 if (_speedHistory.Count == 0)
                     return 0;
+                
+                long retVal = 0;
+                lock (_speedHistory) 
+                {
+                    retVal = _speedHistory.Sum() / _speedHistory.Count;
+                }
 
-                return _speedHistory.Sum() / _speedHistory.Count;
+                return retVal;
             }
         }
 
