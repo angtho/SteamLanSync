@@ -462,7 +462,7 @@ namespace SteamLanSync
             int retVal = 0;
             lock (Transfers)
             {
-                retVal = (Transfers.Where((tfer) => { return tfer.Value.IsSending == false && tfer.Value.State == TransferState.InProgress; })).ToList().Count;
+                retVal = (Transfers.Where((tfer) => { return tfer.Value.IsSending == false && tfer.Value.State != TransferState.Failed && tfer.Value.State != TransferState.Complete; })).ToList().Count;
             }
             return retVal;
         }

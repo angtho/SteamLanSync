@@ -61,6 +61,8 @@ namespace SteamLanSync
 
         private void doReceive()
         {
+            _transfer.State = TransferState.WaitingForManifest;
+
             TcpListener listener = new TcpListener(IPAddress.Any, _transfer.Port);
             TcpClient client = null;
             try
@@ -82,7 +84,6 @@ namespace SteamLanSync
             }
             
             // wait until the manifest has been received (on main thread, not this one)
-            _transfer.State = TransferState.WaitingForManifest;
             Stopwatch sw = new Stopwatch();
             sw.Start();
             bool abort = false;

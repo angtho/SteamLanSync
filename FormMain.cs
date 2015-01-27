@@ -32,7 +32,7 @@ namespace SteamLanSync
             this.Visible = false;
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void FormMain_Load(object sender, EventArgs e)
         {
             string libPath = Properties.Settings.Default.LibraryPath;
 
@@ -66,8 +66,8 @@ namespace SteamLanSync
                     showSettingsDialog();
                 }
             }
-            
 
+            doLayout();
             this.Show();
 
             _updateSpeedTimer = new System.Timers.Timer(300);
@@ -77,7 +77,7 @@ namespace SteamLanSync
             _updateSpeedTimer.Start();
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             _isClosing = true;
             notifyIcon.Visible = false;
@@ -88,7 +88,7 @@ namespace SteamLanSync
             }
         }
 
-        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        private void FormMain_FormClosed(object sender, FormClosedEventArgs e)
         {
             if (manager != null)
             {
@@ -297,6 +297,8 @@ namespace SteamLanSync
                     TimeSpan timeTaken = TimeSpan.FromSeconds(transfer.ElapsedMilliseconds / 1000);
                     labelTransferTime.Text = String.Format(new FileSizeFormatProvider(), "{0:fs} in ", transfer.TotalBytes) + timeTaken.ToString("c");
                     labelTransferSpeed.Text = String.Format(new FileSizeFormatProvider(), "{0:fs}/s", bytesPerSec);
+
+                    // todo - do this in a way that doesn't block the UI thread
                     MessageBox.Show(String.Format("{0} has finished syncing!", transfer.App.Name), "Transfer Complete");
                     
                 }
@@ -428,6 +430,34 @@ namespace SteamLanSync
         {
             ListView lv = (ListView)sender;
             buttonRequestApp.Enabled = lv.SelectedItems.Count > 0;
+        }
+
+        private void FormMain_Resize(object sender, EventArgs e)
+        {
+            doLayout();
+        }
+
+        private void doLayout()
+        {
+            listViewLibrary.Left = 20;
+            listViewLibrary.Width = (this.ClientRectangle.Width / 2) - 10 - 20;
+            
+            listViewAvailableApps.Width = (this.ClientRectangle.Width / 2) - 10 - 20;
+            listViewAvailableApps.Left = listViewLibrary.Right + 20;
+            
+            labelAvailableApps.Left = listViewAvailableApps.Left;
+            labelMyLibrary.Left = listViewLibrary.Left;
+
+            progressBarTransfer.Width = listViewAvailableApps.Width;
+            progressBarTransfer.Left = listViewAvailableApps.Left;
+
+            buttonRequestApp.Left = listViewAvailableApps.Right - buttonRequestApp.Width;
+            labelTransferSpeed.Left = listViewAvailableApps.Right - labelTransferSpeed.Width;
+            labelTransferTime.Left = listViewAvailableApps.Left;
+            labelTransferName.Left = listViewAvailableApps.Left;
+
+            labelNoLibraryApps.Left = listViewLibrary.Left + 10;
+            lblNoApps.Left = listViewAvailableApps.Left + 10;
         }
     }
 }
