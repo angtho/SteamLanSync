@@ -125,7 +125,6 @@ namespace SteamLanSync
             updateStatus(String.Format("Sharing {0} apps from library {1}", Library.Apps.Count, Library.Path));
         }
 
-        // Does not stop pending transfers
         public void Stop()
         {
             if (_udpAgent != null)
@@ -140,6 +139,17 @@ namespace SteamLanSync
             {
                 _deadPeerTimer.Stop();
             }
+
+            // cancel pending transfers
+            lock (Transfers)
+            {
+                foreach (TransferInfo t in Transfers.Values)
+                {
+                    if (t.Agent != null)
+                        t.Agent.CancelTransfer();
+                }
+            }
+            
         }
 
         private void removeDeadPeers(object sender, System.Timers.ElapsedEventArgs e)
@@ -352,14 +362,19 @@ namespace SteamLanSync
 
         private void handleStartAppTransferMessage(StartAppTransferMessage msg, IPAddress sender)
         {
-            
-            if (!Transfers.ContainsKey(msg.transferId))
-            {
-                Debug.WriteLine("Received StartAppTransferMessage for unknown transfer [" + msg.transferId + "]");
-                return;
-            }
+            TransferInfo theTransfer = null;
 
-            TransferInfo theTransfer = Transfers[msg.transferId];
+            lock (Transfers)
+            {
+                if (!Transfers.ContainsKey(msg.transferId))
+                {
+                    Debug.WriteLine("Received StartAppTransferMessage for unknown transfer [" + msg.transferId + "]");
+                }
+                theTransfer = Transfers[msg.transferId];
+            }
+            if (theTransfer == null)
+                return;
+            
             lock (theTransfer) // this will also be accessed by the TransferAgent's receive thread
             {
                 theTransfer.Manifest = msg.manifest;
@@ -369,23 +384,21 @@ namespace SteamLanSync
 
         private void handleCancelAppTransferMessage(CancelAppTransferMessage msg, IPAddress sender)
         {
-            if (!Transfers.ContainsKey(msg.transferId))
-            {
-                Debug.WriteLine("Received CancelAppTransferMessage for unknown transfer [" + msg.transferId + "]");
-                return;
-            }
+            TransferInfo theTransfer = null;
 
             lock (Transfers)
             {
-                TransferInfo transfer = Transfers[msg.transferId];
-                if (transfer.Thread != null && transfer.Thread.IsAlive)
+                if (!Transfers.ContainsKey(msg.transferId))
                 {
-                    transfer.Thread.Abort();
+                    Debug.WriteLine("Received CancelAppTransferMessage for unknown transfer [" + msg.transferId + "]");
                 }
-                transfer.Thread = null;
-                Transfers.Remove(transfer.TransferId);
+                theTransfer = Transfers[msg.transferId];
             }
-            
+
+            if (theTransfer != null && theTransfer.Agent != null)
+            {
+                theTransfer.Agent.CancelTransfer();
+            }   
         }
 
         private void handleGoodbyeMessage(GoodbyeMessage msg, IPAddress sender)
@@ -446,7 +459,12 @@ namespace SteamLanSync
 
         private int getReceiveTransfersInProgress()
         {
-            return (Transfers.Where((tfer) => { return tfer.Value.IsSending == false && tfer.Value.State == TransferState.InProgress; })).ToList().Count;
+            int retVal = 0;
+            lock (Transfers)
+            {
+                retVal = (Transfers.Where((tfer) => { return tfer.Value.IsSending == false && tfer.Value.State == TransferState.InProgress; })).ToList().Count;
+            }
+            return retVal;
         }
 
         public void RequestApp(AppInfo app)
@@ -491,8 +509,10 @@ namespace SteamLanSync
 
         private void startReceiveApp(TransferInfo transfer)
         {
-            
-            Transfers.Add(transfer.TransferId, transfer);
+            lock (Transfers)
+            {
+                Transfers.Add(transfer.TransferId, transfer);
+            }
             subscribeTransferEvents(transfer);
             
             // create agent to handle the transfer
