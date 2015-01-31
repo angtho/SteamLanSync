@@ -470,18 +470,5 @@ namespace SteamLanSync
             lblNoApps.Left = listViewAvailableApps.Left + 10;
         }
 
-        private void button1_Click(object sender, EventArgs e)
-        {
-            if (listViewLibrary.SelectedItems.Count > 0)
-            {
-                AppInfo app = (AppInfo)listViewLibrary.SelectedItems[0].Tag;
-                AppManifest manifest = AppManifest.FromAppInfo(app, manager.Library, true);
-                StartAppTransferMessage msg = new Messages.StartAppTransferMessage();
-                msg.manifest = manifest;
-                Debug.WriteLine("");
-                Debug.Write(msg.Serialize());
-                Debug.WriteLine("");
-            }
-        }
     }
 }
