@@ -13,6 +13,7 @@ namespace SteamLanSync
         public string AppId = "";
         public string Name = "";
         public string InstallDir = "";
+        public int BuildId = 0;
         public long Size = 0;
         public int StateFlags = 0;
 
@@ -76,6 +77,12 @@ namespace SteamLanSync
             if (m.Groups.Count > 1)
             {
                 info.StateFlags = int.Parse(m.Groups[1].Value);
+            }
+
+            m = Regex.Match(s, @"""buildid""\s+""(\d+)""", RegexOptions.IgnoreCase);
+            if (m.Groups.Count > 1)
+            {
+                info.BuildId = int.Parse(m.Groups[1].Value);
             }
 
             if (info.AppId.Length > 0 && info.Name.Length > 0 && info.Size > 0 && info.InstallDir.Length > 0)

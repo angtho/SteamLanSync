@@ -70,6 +70,7 @@ namespace SteamLanSync.Messages
         public string appId;
         public string transferId;
         public int listenPort;
+        public AppManifest existingFiles;
 
         public RequestAppTransferMessage() : base("REQUEST_APP_TRANSFER") { }
     }

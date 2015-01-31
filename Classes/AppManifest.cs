@@ -26,19 +26,13 @@ namespace SteamLanSync
         {
             string libPath = library.Path;
             Utility.EnsureEndsWithSlash(ref libPath);
-            DirectoryInfo di = new DirectoryInfo(libPath);
-            string acfPath = di.FullName + "appmanifest_" + app.AppId + ".acf";
+            DirectoryInfo di = new DirectoryInfo(libPath + AppManifest.STEAM_COMMON_DIR + app.InstallDir);
             AppManifest manifest = new AppManifest();
             manifest._hashFiles = hashFiles;
 
             try
             {
-                manifest.AddDirectory(new DirectoryInfo(libPath + AppManifest.STEAM_COMMON_DIR + app.InstallDir), di);
-                if (File.Exists(acfPath))
-                {
-                    FileInfo fi = new FileInfo(acfPath);
-                    manifest.AddFile(new AppManifestFile(Utility.GetRelativePath(libPath, fi.FullName), (long)fi.Length));
-                }
+                manifest.AddDirectory(di, di);
             }
             catch (Exception e)
             {
@@ -50,7 +44,13 @@ namespace SteamLanSync
 
         public static AppManifest FromDirectory(string path)
         {
+            return FromDirectory(path, false);
+        }
+
+        public static AppManifest FromDirectory(string path, bool hashFiles)
+        {
             AppManifest manifest = new AppManifest();
+            manifest._hashFiles = hashFiles;
             DirectoryInfo di = new DirectoryInfo(path);
             try
             {
@@ -66,10 +66,6 @@ namespace SteamLanSync
 
         private void AddDirectory(DirectoryInfo di, DirectoryInfo root)
         {
-            foreach (DirectoryInfo subdir in di.GetDirectories())
-            {
-                this.AddDirectory(subdir, root);
-            }
             foreach (FileInfo fi in di.GetFiles())
             {
                 AppManifestFile addThis = new AppManifestFile(Utility.GetRelativePath(root.FullName, fi.FullName), (long)fi.Length);
@@ -84,12 +80,45 @@ namespace SteamLanSync
                 }
                 this.AddFile(addThis);
             }
+            foreach (DirectoryInfo subdir in di.GetDirectories())
+            {
+                this.AddDirectory(subdir, root);
+            }
         }
 
         private void AddFile(AppManifestFile file) 
         {
             
             files.Add(file);
+        }
+
+        public void RemoveMatchingFiles(AppManifest otherManifest)
+        {
+            // build dictionary of files
+            Dictionary<string, AppManifestFile> filesDict = new Dictionary<string, AppManifestFile>();
+            foreach (AppManifestFile thisFile in files)
+            {
+                filesDict.Add(thisFile.NormalizedPath, thisFile);
+            }
+
+            // see which ones exist
+            foreach (AppManifestFile f in otherManifest.files)
+            {
+                if (filesDict.ContainsKey(f.NormalizedPath))
+                {
+                    if (filesDict[f.NormalizedPath].sha1_hash == f.sha1_hash)
+                    {
+                        // the other manifest contains a file with the same path and same hash, so remove our local copy
+                        files.Remove(filesDict[f.NormalizedPath]);
+                    }
+                }
+                else
+                {
+                    // the other manifest contains a file that's not in our local manifest, so create it in our manifest
+                    // but with a filesize of zero to indicate that it should be deleted
+                    files.Add(new AppManifestFile(f.path, 0));
+                }
+            }
         }
     }
 
@@ -111,6 +140,14 @@ namespace SteamLanSync
             path = _path;
             size = _size;
             sha1_hash = _sha1_hash;
+        }
+
+        public string NormalizedPath 
+        {
+            get 
+            {
+               return path.ToUpper().Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
         }
     }
 }

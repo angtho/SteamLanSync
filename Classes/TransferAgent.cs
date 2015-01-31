@@ -144,13 +144,14 @@ namespace SteamLanSync
                 filePath = rootDir + currentFile.path; 
                 
                 //ensure this is inside Library path (../ may escape it)
-                if (filePath.Contains(".." + Path.DirectorySeparatorChar) || filePath.Contains(".." + Path.AltDirectorySeparatorChar))
+                if (filePath.Contains(".." + Path.DirectorySeparatorChar) || filePath.Contains(".." + Path.AltDirectorySeparatorChar)
+                    || !(currentFile.path.StartsWith("." + Path.DirectorySeparatorChar.ToString()) || currentFile.path.StartsWith("." + Path.AltDirectorySeparatorChar)))
                 {
-                    throw new Exception("Cannot write to a directory outside ManifestRoot (Library path)");
+                    throw new Exception("Cannot write to a directory outside ManifestRoot. " + filePath + " is outside " + rootDir);
                 }
 
                 FileInfo fi = new FileInfo(filePath);
-                if (!fi.Directory.Exists)
+                if (!fi.Directory.Exists && currentFile.size > 0)
                 {
                     try
                     {
@@ -171,7 +172,14 @@ namespace SteamLanSync
 
                         return;
                     }
-                    
+                }
+
+                if (currentFile.size == 0 && fi.Exists)
+                {
+                    // the manifest contains a zero-byte file, this means we should delete the file (if it exists) on our local copy
+                    fi.Delete();
+                    Debug.WriteLine("Deleted " + fi.FullName);
+                    continue;
                 }
 
                 // open the file for writing, replacing any existing file with same name
@@ -298,6 +306,8 @@ namespace SteamLanSync
                 {
                     AppManifestFile currentFile = files[fileIndex];
                     filePath = rootDir + currentFile.path;
+                    if (!File.Exists(filePath)) // this entry has put in the manifest to tell the remote peer to delete the file, we dont need to send anything
+                        continue;
                     fs = File.OpenRead(filePath);
 
                     Debug.WriteLine("Sending [" + filePath + "]");

@@ -51,6 +51,7 @@
             this.labelMyLibrary = new System.Windows.Forms.Label();
             this.listViewLibrary = new System.Windows.Forms.ListView();
             this.labelNoLibraryApps = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
             this.menuSysTray.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
@@ -206,7 +207,7 @@
             // 
             this.labelTransferTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.labelTransferTime.AutoSize = true;
-            this.labelTransferTime.Location = new System.Drawing.Point(375, 423);
+            this.labelTransferTime.Location = new System.Drawing.Point(375, 413);
             this.labelTransferTime.Name = "labelTransferTime";
             this.labelTransferTime.Size = new System.Drawing.Size(19, 13);
             this.labelTransferTime.TabIndex = 24;
@@ -243,11 +244,22 @@
             this.labelNoLibraryApps.TabIndex = 21;
             this.labelNoLibraryApps.Text = "No apps in your Library";
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(24, 387);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 25;
+            this.button1.Text = "Hash";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(696, 469);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.labelTransferTime);
             this.Controls.Add(this.labelTransferSpeed);
             this.Controls.Add(this.labelTransferName);
@@ -299,6 +311,7 @@
         private System.Windows.Forms.Label labelMyLibrary;
         private System.Windows.Forms.ListView listViewLibrary;
         private System.Windows.Forms.Label labelNoLibraryApps;
+        private System.Windows.Forms.Button button1;
     }
 }
 

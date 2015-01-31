@@ -322,8 +322,14 @@ namespace SteamLanSync
             SyncPeer peer = _peers.Find((aPeer) => { return aPeer.Address.Equals(sender); });
             Debug.WriteLine(String.Format("I will transfer {0} to {1}", msg.appId, peer.Hostname));
 
+            bool isUpdateRequest = msg.existingFiles != null;
+
             // build manifest
-            AppManifest manifest = AppManifest.FromAppInfo(theApp, Library); // todo - async/threaded
+            AppManifest manifest = AppManifest.FromAppInfo(theApp, Library, isUpdateRequest); // todo - async/threaded
+
+            // if peer provided a list of existing files, check our own
+            if (isUpdateRequest)
+                manifest.RemoveMatchingFiles(msg.existingFiles);
 
             // verify manifest is valid
             if (manifest == null)
@@ -350,7 +356,16 @@ namespace SteamLanSync
             transfer.IsSending = true;
             transfer.Peer = peer;
             transfer.Port = msg.listenPort;
-            transfer.ManifestRoot = new DirectoryInfo(Library.Path);
+            
+            // determine install dir and write
+            string manifestRoot = Library.Path;
+            Utility.EnsureEndsWithSlash(ref manifestRoot);
+            manifestRoot += AppManifest.STEAM_COMMON_DIR + theApp.InstallDir; // todo ensure no path chars in installdir
+            Utility.EnsureEndsWithSlash(ref manifestRoot);
+            DirectoryInfo diManifest = new DirectoryInfo(manifestRoot);
+            if (!diManifest.Exists)
+                diManifest.Create();
+            transfer.ManifestRoot = diManifest;
 
             // subscribe to state change notifications (so we can update our status message)
             subscribeTransferEvents(transfer);
@@ -474,6 +489,12 @@ namespace SteamLanSync
 
         public void RequestApp(AppInfo app)
         {
+            if (app == null)
+                throw new ArgumentNullException("Cannot request null app");
+
+            if (app.InstallDir.Length == 0 || app.InstallDir.Contains(Path.DirectorySeparatorChar) || app.InstallDir.Contains(Path.AltDirectorySeparatorChar))
+                throw new ArgumentOutOfRangeException("Cannot request app with invalid install dir [" + app.InstallDir + "]");
+
             // determine who has a copy of the app
             SyncPeer whoHasIt = null;
             foreach (SyncPeer peer in _peers)
@@ -489,20 +510,38 @@ namespace SteamLanSync
             {
                 throw new AppNotAvailableException();
             }
-            
+
+            // determine install dir
+            string manifestRoot = Library.Path;
+            Utility.EnsureEndsWithSlash(ref manifestRoot);
+            manifestRoot += AppManifest.STEAM_COMMON_DIR + app.InstallDir;
+            Utility.EnsureEndsWithSlash(ref manifestRoot);
+            DirectoryInfo diManifest = new DirectoryInfo(manifestRoot);
+            AppManifest existingFiles = null;
+            if (!diManifest.Exists)
+            {
+                diManifest.Create();
+            }
+            else
+            {
+                // determine which files we already have for this app,
+                // and send that as part of the request message
+                // todo - build manifest async
+                existingFiles = AppManifest.FromDirectory(diManifest.FullName, true);
+            }
+                
             // create a transfer
             TransferInfo transfer = new TransferInfo(); // generates a transferid
             transfer.IsSending = false;
             transfer.Peer = whoHasIt;
             transfer.App = app;
             transfer.Port = Properties.Settings.Default.ListenPort;
-            transfer.ManifestRoot = new DirectoryInfo(Library.Path);
-            
+            transfer.ManifestRoot = diManifest;
             
             if (getReceiveTransfersInProgress() == 0)
             { // start immediately if we're not receiving anything else
                 Debug.WriteLine("Starting transfer agent to receive " + transfer.App.Name);
-                startReceiveApp(transfer);
+                startReceiveApp(transfer, existingFiles);
             }
             else
             { // otherwise add to the queue
@@ -511,8 +550,13 @@ namespace SteamLanSync
             }
 
         }
-
-        private void startReceiveApp(TransferInfo transfer)
+        
+        private void startReceiveApp(TransferInfo transfer) 
+        {
+            startReceiveApp(transfer, null);
+        }
+        
+        private void startReceiveApp(TransferInfo transfer, AppManifest existingFiles)
         {
             lock (Transfers)
             {
@@ -534,6 +578,9 @@ namespace SteamLanSync
             newMsg.appId = transfer.App.AppId;
             newMsg.transferId = transfer.TransferId;
             newMsg.listenPort = transfer.Port;
+            if (existingFiles != null)
+                newMsg.existingFiles = existingFiles;
+
             _tcpAgent.SendMessage(newMsg, transfer.Peer.Address);
         }
 
