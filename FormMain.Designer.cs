@@ -62,8 +62,10 @@
             this.listViewAvailableApps.Location = new System.Drawing.Point(378, 33);
             this.listViewAvailableApps.Name = "listViewAvailableApps";
             this.listViewAvailableApps.Size = new System.Drawing.Size(301, 297);
+            this.listViewAvailableApps.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.listViewAvailableApps.TabIndex = 13;
             this.listViewAvailableApps.UseCompatibleStateImageBehavior = false;
+            this.listViewAvailableApps.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.listViewAvailableApps_ColumnClick);
             this.listViewAvailableApps.SelectedIndexChanged += new System.EventHandler(this.listViewAvailableApps_SelectedIndexChanged);
             // 
             // labelAvailableApps
@@ -229,6 +231,7 @@
             this.listViewLibrary.Location = new System.Drawing.Point(12, 33);
             this.listViewLibrary.Name = "listViewLibrary";
             this.listViewLibrary.Size = new System.Drawing.Size(312, 297);
+            this.listViewLibrary.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.listViewLibrary.TabIndex = 12;
             this.listViewLibrary.UseCompatibleStateImageBehavior = false;
             // 

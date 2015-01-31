@@ -451,10 +451,23 @@ namespace SteamLanSync
         {
             listViewLibrary.Left = 16;
             listViewLibrary.Width = (this.ClientRectangle.Width / 2) - 8 - 16;
-            
+
+            if (listViewLibrary.Columns.Count > 1)
+            {
+                listViewLibrary.Columns[0].Width = listViewLibrary.Width - 105;
+                listViewLibrary.Columns[1].Width = 80;
+
+            }
+
             listViewAvailableApps.Width = (this.ClientRectangle.Width / 2) - 8 - 16;
             listViewAvailableApps.Left = listViewLibrary.Right + 16;
-            
+
+            if (listViewAvailableApps.Columns.Count > 1)
+            {
+                listViewAvailableApps.Columns[0].Width = listViewLibrary.Width - 105;
+                listViewAvailableApps.Columns[1].Width = 80;
+            }
+
             labelAvailableApps.Left = listViewAvailableApps.Left;
             labelMyLibrary.Left = listViewLibrary.Left;
 
@@ -468,6 +481,11 @@ namespace SteamLanSync
 
             labelNoLibraryApps.Left = listViewLibrary.Left + 10;
             lblNoApps.Left = listViewAvailableApps.Left + 10;
+        }
+
+        private void listViewAvailableApps_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+
         }
 
     }
