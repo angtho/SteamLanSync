@@ -13,11 +13,12 @@ using System.Diagnostics;
 namespace SteamLanSync
 {
     
-
     public struct TcpPeerConnection
     {
+        const int STRING_BUFFER_CAPACITY = 10 * 1024 * 1024; // 10 MB message buffer
+
         public byte[] buffer;
-        public string messageBuffer;
+        public StringBuilder messageBuffer;
         public TcpClient client;
         public NetworkStream stream;
         public IPAddress remoteAddress;
@@ -25,12 +26,11 @@ namespace SteamLanSync
         public TcpPeerConnection(TcpClient _client, NetworkStream _stream, IPAddress _remoteAddress)
         {
             buffer = new byte[4096];
-            messageBuffer = "";
+            messageBuffer = new StringBuilder(STRING_BUFFER_CAPACITY/10, STRING_BUFFER_CAPACITY);
             client = _client;
             stream = _stream;
             remoteAddress = _remoteAddress;
         }
-        
     }
 
     public class TcpAgent
@@ -126,11 +126,12 @@ namespace SteamLanSync
 
         private void ReceiveData(IAsyncResult ar)
         {
-            TcpPeerConnection conn = (TcpPeerConnection)ar.AsyncState; // ar.AsyncState is the TcpPeerConnection we passed in to BeginRead()
+            TcpPeerConnection conn;
             int i;
             
             try
             {
+                conn = (TcpPeerConnection)ar.AsyncState;  // ar.AsyncState is the TcpPeerConnection we passed in to BeginRead()
                 i = conn.stream.EndRead(ar);
             }
             catch (ObjectDisposedException)
@@ -164,16 +165,29 @@ namespace SteamLanSync
             }
 
             // decode receive bytes and append to rx string buffer
-            conn.messageBuffer += System.Text.Encoding.ASCII.GetString(conn.buffer, 0, i);
-
-            Debug.WriteLine("TcpAgent buffer = " + conn.messageBuffer);
+            try
+            {
+                conn.messageBuffer.Append(System.Text.Encoding.ASCII.GetString(conn.buffer, 0, i));
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                Debug.WriteLine("Message string buffer exceeded max capacity. Clearing buffer.");
+                conn.messageBuffer.Clear();
+            }
+           
+            //Debug.WriteLine("TcpAgent buffer = " + conn.messageBuffer);
 
             // see if the resulting string is a valid message
             try
             {
-                Message msg = MessageParser.Parse(ref (conn.messageBuffer));
+                // the Parse method will remove the parsed message from the string (as the buffer may contain more messages),
+                // so we need to place that modified string back into our stringbuilder buffer
+                string bufferContents = conn.messageBuffer.ToString();
+                Message msg = MessageParser.Parse(ref bufferContents);
                 if (msg != null)
                 {
+                    conn.messageBuffer.Clear();
+                    conn.messageBuffer.Append(bufferContents);
                     MessageReceivedEventHandler handler = OnMessageReceived;
                     if (handler != null)
                         handler(this, new MessageReceivedEventArgs(msg, ((IPEndPoint)conn.client.Client.RemoteEndPoint).Address));
@@ -189,7 +203,24 @@ namespace SteamLanSync
             
 
             // read more data
-            conn.stream.BeginRead(conn.buffer, 0, conn.buffer.Length, ReceiveData, conn);
+            try
+            {
+                conn.stream.BeginRead(conn.buffer, 0, conn.buffer.Length, ReceiveData, conn);
+            }
+            catch (ObjectDisposedException)
+            {
+                return;
+            }
+            catch (IOException ex)
+            {
+                Debug.WriteLine("Caught [" + ex.GetType().ToString() + "]\n\n" + ex.StackTrace);
+                return;
+            }
+            catch (SocketException ex)
+            {
+                Debug.WriteLine("Caught [" + ex.GetType().ToString() + "]\n\n" + ex.StackTrace);
+                return;
+            }
         }
 
         public void SendMessage(Message msg, IPAddress addr) 
