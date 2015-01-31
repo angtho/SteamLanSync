@@ -15,14 +15,22 @@ namespace SteamLanSync
         public AppInfo appInfo;
         public List<AppManifestFile> files = new List<AppManifestFile>();
 
+        private bool _hashFiles = false;
+
         public static AppManifest FromAppInfo(AppInfo app, AppLibrary library)
+        {
+            return FromAppInfo(app, library, false);
+        }
+
+        public static AppManifest FromAppInfo(AppInfo app, AppLibrary library, bool hashFiles)
         {
             string libPath = library.Path;
             Utility.EnsureEndsWithSlash(ref libPath);
             DirectoryInfo di = new DirectoryInfo(libPath);
             string acfPath = di.FullName + "appmanifest_" + app.AppId + ".acf";
             AppManifest manifest = new AppManifest();
-            
+            manifest._hashFiles = hashFiles;
+
             try
             {
                 manifest.AddDirectory(new DirectoryInfo(libPath + AppManifest.STEAM_COMMON_DIR + app.InstallDir), di);
@@ -64,12 +72,23 @@ namespace SteamLanSync
             }
             foreach (FileInfo fi in di.GetFiles())
             {
-                this.AddFile(new AppManifestFile(Utility.GetRelativePath(root.FullName, fi.FullName), (long)fi.Length));
+                AppManifestFile addThis = new AppManifestFile(Utility.GetRelativePath(root.FullName, fi.FullName), (long)fi.Length);
+                if (this._hashFiles)
+                {
+                    using (FileStream fs = File.OpenRead(fi.FullName))
+                    {
+                        string hash = Utility.GetSha1Hash(fs);
+                        fs.Close();
+                        addThis.sha1_hash = hash;
+                    }
+                }
+                this.AddFile(addThis);
             }
         }
 
         private void AddFile(AppManifestFile file) 
         {
+            
             files.Add(file);
         }
     }
@@ -78,11 +97,20 @@ namespace SteamLanSync
     {
         public string path;
         public long size;
+        public string sha1_hash;
 
         public AppManifestFile(string _path, long _size)
         {
             path = _path;
             size = _size;
+            sha1_hash = "";
+        }
+
+        public AppManifestFile(string _path, long _size, string _sha1_hash)
+        {
+            path = _path;
+            size = _size;
+            sha1_hash = _sha1_hash;
         }
     }
 }

@@ -16,6 +16,14 @@ namespace SteamLanSync
             return val2;
         }
 
+        public static string GetSha1Hash(Stream s)
+        {
+            using (var sha1 = new System.Security.Cryptography.SHA1CryptoServiceProvider())
+            {
+                return Convert.ToBase64String(sha1.ComputeHash(s));
+            }
+        }
+
         public static void EnsureEndsWithSlash(ref string s) 
         {
             if (s.EndsWith(Path.DirectorySeparatorChar.ToString()) || s.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
@@ -168,4 +176,6 @@ namespace SteamLanSync
         }
 
     }
+
+   
 }
